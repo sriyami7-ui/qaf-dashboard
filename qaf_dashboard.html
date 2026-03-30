@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شبكة قاف — لوحة التحكم</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: #1e1e1e;
+    --accent: #c8f545;
+    --accent-dim: rgba(200,245,69,0.08);
+    --text: #f0f0f0;
+    --muted: #555;
+    --card-bg: #141414;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    min-height: 100vh;
+    padding: 40px 32px;
+  }
+
+  .grid-lines {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brand { display: flex; flex-direction: column; gap: 4px; }
+
+  .brand-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .last-updated {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: left;
+    margin-top: 6px;
+  }
+
+  #auth-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .auth-icon {
+    width: 64px;
+    height: 64px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    background: var(--card-bg);
+  }
+
+  .auth-title { font-size: 22px; font-weight: 500; }
+  .auth-sub { font-size: 14px; color: var(--muted); max-width: 320px; line-height: 1.6; }
+
+  .btn-auth {
+    margin-top: 8px;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    padding: 14px 32px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn-auth:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  #dashboard { display: none; }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 28px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .metric-card:hover { border-color: #2e2e2e; }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .metric-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .metric-sub {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .metric-accent { color: var(--accent); }
+
+  .channel-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .channel-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .channel-thumb-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .channel-info { flex: 1; }
+  .channel-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .channel-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    margin-left: 6px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .btn-refresh {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+
+  .coming-soon-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .coming-card {
+    background: var(--card-bg);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0.5;
+  }
+
+  .coming-label {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .coming-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    color: var(--muted);
+  }
+
+  .coming-tag {
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--border);
+    padding: 2px 8px;
+    border-radius: 4px;
+    width: fit-content;
+    font-family: 'Space Mono', monospace;
+  }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .btn-signout {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    text-decoration: underline;
+  }
+  .btn-signout:hover { color: var(--text); }
+
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  @media (max-width: 600px) {
+    body { padding: 24px 16px; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .coming-soon-grid { grid-template-columns: 1fr; }
+    .metric-value { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-lines"></div>
+<div class="wrapper">
+
+  <header>
+    <div class="brand">
+      <span class="brand-name">QAF NETWORK</span>
+      <h1>لوحة التحكم</h1>
+    </div>
+    <div style="text-align:left">
+      <div id="last-updated" class="last-updated">—</div>
+      <button class="btn-refresh" id="btn-refresh" onclick="refreshData()" style="display:none;margin-top:8px">↻ تحديث</button>
+    </div>
+  </header>
+
+  <div id="auth-section">
+    <div class="auth-icon">▶</div>
+    <div class="auth-title">ربط قناة يوتيوب</div>
+    <div class="auth-sub">سجّل دخولك بحساب Google الخاص بشبكة قاف لعرض البيانات الحية</div>
+    <button class="btn-auth" onclick="startAuth()">تسجيل الدخول بـ Google</button>
+    <div id="auth-status" class="loading-text" style="display:none">جاري الاتصال...</div>
+  </div>
+
+  <div id="dashboard">
+
+    <div class="channel-card" id="channel-card">
+      <div class="channel-thumb-placeholder" id="thumb-placeholder">Q</div>
+      <img id="channel-thumb" class="channel-thumb" style="display:none" src="" alt="">
+      <div class="channel-info">
+        <div class="channel-title" id="channel-title">شبكة قاف <span class="status-dot"></span></div>
+        <div class="channel-desc" id="channel-desc">—</div>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">المشتركون</div>
+        <div class="metric-value metric-accent" id="subscribers">—</div>
+        <div class="metric-sub">إجمالي المشتركين على يوتيوب</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">إجمالي المشاهدات</div>
+        <div class="metric-value" id="views">—</div>
+        <div class="metric-sub">مجموع مشاهدات جميع الفيديوهات</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">عدد الفيديوهات</div>
+        <div class="metric-value" id="videos">—</div>
+        <div class="metric-sub">الفيديوهات المنشورة</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">متوسط المشاهدات</div>
+        <div class="metric-value" id="avg-views">—</div>
+        <div class="metric-sub">لكل فيديو</div>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;margin-bottom:12px">
+      <div class="metric-label" style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase">قريباً — مصادر أخرى</div>
+    </div>
+
+    <div class="coming-soon-grid">
+      <div class="coming-card">
+        <div class="coming-label">Apple Podcasts</div>
+        <div class="coming-value">—</div>
+        <div class="coming-tag">قريباً</div>
+      </div>
+      <div class="coming-card">
+        <div class="coming-label">Instagram + LinkedIn + X</div>
+        <div class="coming-value">—</div>
+        <div class="coming-tag">قريباً</div>
+      </div>
+      <div class="coming-card">
+        <div class="coming-label">إجمالي المتابعين</div>
+        <div class="coming-value">—</div>
+        <div class="coming-tag">قريباً</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-text">QAFEER LLC — MUSCAT, OMAN</div>
+    <button class="btn-signout" id="btn-signout" onclick="signOut()" style="display:none">تسجيل الخروج</button>
+  </footer>
+
+</div>
+
+<script>
+const CLIENT_ID = '589404229048-8ffq3fr36jvgu512947b9p197severlf.apps.googleusercontent.com';
+const CHANNEL_ID = 'UClYbFPknIF9PxBJj2FQIokg';
+const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly';
+const REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
+
+function formatNumber(n) {
+  n = parseInt(n);
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return n.toLocaleString('ar');
+}
+
+function startAuth() {
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: 'token',
+    scope: SCOPES,
+    include_granted_scopes: 'true',
+  });
+  window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+}
+
+function getTokenFromHash() {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  return params.get('access_token');
+}
+
+async function fetchChannelData(token) {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('btn-refresh').style.display = 'inline-block';
+  document.getElementById('btn-signout').style.display = 'inline-block';
+
+  const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${CHANNEL_ID}&access_token=${token}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.items || data.items.length === 0) {
+      document.getElementById('channel-title').textContent = 'شبكة قاف';
+      return;
+    }
+    const ch = data.items[0];
+    const stats = ch.statistics;
+    const snippet = ch.snippet;
+
+    document.getElementById('channel-title').innerHTML = (snippet.title || 'شبكة قاف') + ' <span class="status-dot"></span>';
+    document.getElementById('channel-desc').textContent = snippet.description ? snippet.description.substring(0, 120) + '...' : '—';
+
+    const thumb = snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url;
+    if (thumb) {
+      document.getElementById('channel-thumb').src = thumb;
+      document.getElementById('channel-thumb').style.display = 'block';
+      document.getElementById('thumb-placeholder').style.display = 'none';
+    }
+
+    const subs = stats.subscriberCount || '0';
+    const views = stats.viewCount || '0';
+    const vids = stats.videoCount || '0';
+    const avg = parseInt(vids) > 0 ? Math.floor(parseInt(views) / parseInt(vids)) : 0;
+
+    document.getElementById('subscribers').textContent = formatNumber(subs);
+    document.getElementById('views').textContent = formatNumber(views);
+    document.getElementById('videos').textContent = formatNumber(vids);
+    document.getElementById('avg-views').textContent = formatNumber(avg);
+
+    const now = new Date();
+    document.getElementById('last-updated').textContent = 'آخر تحديث: ' + now.toLocaleTimeString('ar-OM');
+
+    sessionStorage.setItem('yt_token', token);
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function refreshData() {
+  const token = sessionStorage.getItem('yt_token');
+  if (token) fetchChannelData(token);
+}
+
+function signOut() {
+  sessionStorage.removeItem('yt_token');
+  window.location.href = REDIRECT_URI;
+}
+
+window.onload = function() {
+  const token = getTokenFromHash() || sessionStorage.getItem('yt_token');
+  if (token) {
+    history.replaceState(null, '', window.location.pathname);
+    fetchChannelData(token);
+  }
+};
+</script>
+</body>
+</html>
